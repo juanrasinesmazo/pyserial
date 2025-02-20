@@ -661,6 +661,18 @@ class SerialBase(io.RawIOBase):
         """
         return self.read(self.in_waiting)
 
+    def read_after(self, expected, size):
+        line = bytearray()
+        timeout = Timeout(self._timeout)
+        while not timeout.expired():
+            c = self.read(1)
+            if c == expected:
+                while len(line) < size:
+                    line += self.read(1)
+                return bytes(line)
+        print('Timeout reached', flush=True)
+        return bytes()
+
     def read_until(self, expected=LF, size=None):
         """\
         Read until an expected sequence is found (line feed by default), the size
